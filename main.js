@@ -1,24 +1,25 @@
 //------------------------------------------------------------
-// 샘플 음성
+// 저장소 구조
 //------------------------------------------------------------
-const samples = [
-  { title: "따뜻한 사랑해", fileUrl: "assets/sample1.mp3", fromWhom: "샘플" },
-  { title: "밝은 사랑해", fileUrl: "assets/sample2.mp3", fromWhom: "샘플" },
-];
 
-//------------------------------------------------------------
-// 로컬 저장
-//------------------------------------------------------------
-function loadLoveList() {
-  return JSON.parse(localStorage.getItem("loveList") || "[]");
+// 전체 음성 저장소 (녹음/업로드/샘플)
+function loadAllVoices() {
+  return JSON.parse(localStorage.getItem("allVoices") || "[]");
+}
+function saveAllVoices(list) {
+  localStorage.setItem("allVoices", JSON.stringify(list));
 }
 
-function saveLoveList(list) {
-  localStorage.setItem("loveList", JSON.stringify(list));
+// 홈화면 즐겨찾기 저장소
+function loadFavorites() {
+  return JSON.parse(localStorage.getItem("favoriteVoices") || "[]");
+}
+function saveFavorites(list) {
+  localStorage.setItem("favoriteVoices", JSON.stringify(list));
 }
 
 //------------------------------------------------------------
-// 태그 변환
+// 태그 변환 함수
 //------------------------------------------------------------
 function displayFromWhom(value) {
   const map = {
@@ -35,31 +36,60 @@ function displayFromWhom(value) {
 }
 
 //------------------------------------------------------------
-// 샘플 리스트 표시(add.html 전용)
+// 샘플 음성 (add.html에서 전체 리스트에 자동 추가 X)
+// add.html 실행 시 처음 1회 자동 주입
 //------------------------------------------------------------
-if (document.getElementById("sampleList")) {
-  const container = document.getElementById("sampleList");
-  samples.forEach((item) => {
-    const div = document.createElement("div");
-    div.className = "card";
+const sampleVoices = [
+  { title: "따뜻한 사랑해", fileUrl: "assets/sample1.mp3", fromWhom: "샘플" },
+  { title: "밝은 사랑해", fileUrl: "assets/sample2.mp3", fromWhom: "샘플" }
+];
 
-    div.innerHTML = `
-      <b>${item.title}</b><br>
-      <button onclick="new Audio('${item.fileUrl}').play()">▶ 듣기</button>
-      <button class="primary" onclick="addLove('${item.title}', '${item.fileUrl}', '샘플')">+ 추가</button>
-    `;
+function injectSamplesOnce() {
+  const all = loadAllVoices();
+  if (all.some(v => v.fromWhom === "샘플")) return; // 중복 방지
 
-    container.appendChild(div);
+  sampleVoices.forEach(s => {
+    all.push({
+      id: crypto.randomUUID(),
+      title: s.title,
+      fileUrl: s.fileUrl,
+      fromWhom: s.fromWhom,
+      createdAt: Date.now()
+    });
   });
+
+  saveAllVoices(all);
 }
 
 //------------------------------------------------------------
-// 저장 함수 (샘플 + 녹음 + 업로드)
+// 녹음 / 업로드 파일 저장
 //------------------------------------------------------------
-function addLove(title, fileUrl, fromWhom) {
-  let list = loadLoveList();
 
-  list.push({
+async function blobToBase64(blob) {
+  return new Promise(resolve => {
+    const reader = new FileReader();
+    reader.onloadend = () => resolve(reader.result);
+    reader.readAsDataURL(blob);
+  });
+}
+
+async function saveRecordedVoice(blob, fromWhom) {
+  const base64 = await blobToBase64(blob);
+  addVoice("내 녹음", base64, fromWhom);
+}
+
+async function saveUploadedFile(file, fromWhom) {
+  const base64 = await blobToBase64(file);
+  addVoice(file.name, base64, fromWhom);
+}
+
+//------------------------------------------------------------
+// 전체 음성 추가하기
+//------------------------------------------------------------
+function addVoice(title, fileUrl, fromWhom) {
+  let all = loadAllVoices();
+
+  all.push({
     id: crypto.randomUUID(),
     title,
     fileUrl,
@@ -67,86 +97,125 @@ function addLove(title, fileUrl, fromWhom) {
     createdAt: Date.now()
   });
 
-  saveLoveList(list);
+  saveAllVoices(all);
   alert("추가되었습니다!");
 }
 
 //------------------------------------------------------------
-// 녹음 기능(add.html 전용)
+// 즐겨찾기 추가 / 삭제
 //------------------------------------------------------------
-let mediaRecorder;
-let audioChunks = [];
-let recordedBlob = null;
+function addToFavorite(id) {
+  let fav = loadFavorites();
+  if (!fav.includes(id)) fav.push(id);
+  saveFavorites(fav);
+  alert("홈화면 즐겨찾기에 추가되었습니다.");
+}
 
-function startRecording() {
-  navigator.mediaDevices.getUserMedia({ audio: true }).then(stream => {
-    mediaRecorder = new MediaRecorder(stream);
-    audioChunks = [];
+function removeFavorite(id) {
+  let fav = loadFavorites();
+  fav = fav.filter(v => v !== id);
+  saveFavorites(fav);
+  renderFavoriteList();
+}
 
-    mediaRecorder.start();
+//------------------------------------------------------------
+// 전체 음성 삭제 (add.html 전용)
+//------------------------------------------------------------
+function deleteVoice(id) {
+  let all = loadAllVoices();
+  all = all.filter(v => v.id !== id);
+  saveAllVoices(all);
 
-    mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
+  // 즐겨찾기에도 있으면 제거
+  let fav = loadFavorites();
+  fav = fav.filter(v => v !== id);
+  saveFavorites(fav);
 
-    mediaRecorder.onstop = () => {
-      recordedBlob = new Blob(audioChunks, { type: "audio/mp3" });
-      const url = URL.createObjectURL(recordedBlob);
-      document.getElementById("previewAudio").src = url;
-      document.getElementById("previewAudio").style.display = "block";
-    };
+  renderAllVoices();
+}
+
+//------------------------------------------------------------
+// 리스트 렌더링 — 홈(index.html)
+//------------------------------------------------------------
+function renderFavoriteList() {
+  const fav = loadFavorites();
+  const all = loadAllVoices();
+  const container = document.getElementById("list");
+  if (!container) return;
+
+  container.innerHTML = "";
+
+  fav.forEach(id => {
+    const item = all.find(v => v.id === id);
+    if (!item) return;
+
+    const div = document.createElement("div");
+    div.className = "list-item-card";
+
+    div.innerHTML = `
+      <div class="list-title">${item.title}</div>
+      <div class="list-from">${displayFromWhom(item.fromWhom)}가 나에게…</div>
+      <button class="primary small" onclick="new Audio('${item.fileUrl}').play()">▶ 재생</button>
+      <button class="delete" onclick="removeFavorite('${item.id}')">🗑 삭제</button>
+    `;
+
+    container.appendChild(div);
   });
 }
 
-function stopRecording() {
-  if (mediaRecorder) mediaRecorder.stop();
+//------------------------------------------------------------
+// 리스트 렌더링 — 추가하기(add.html)
+//------------------------------------------------------------
+function renderAllVoices() {
+  const all = loadAllVoices();
+  const container = document.getElementById("allList");
+  if (!container) return;
+
+  container.innerHTML = "";
+
+  all.forEach(item => {
+    const div = document.createElement("div");
+    div.className = "list-item-card";
+
+    div.innerHTML = `
+      <div class="list-title">${item.title}</div>
+      <div class="list-from">${displayFromWhom(item.fromWhom)}가 나에게…</div>
+      <button class="primary small" onclick="addToFavorite('${item.id}')">★ 즐겨찾기</button>
+      <button class="primary small" onclick="new Audio('${item.fileUrl}').play()">▶ 재생</button>
+      <button class="delete" onclick="deleteVoice('${item.id}')">🗑 삭제</button>
+    `;
+
+    container.appendChild(div);
+  });
 }
 
 //------------------------------------------------------------
-// 저장하기 버튼(add.html)
-//------------------------------------------------------------
-function saveVoice() {
-  const fromWhom = getFromWhom();
-
-  // 녹음 파일 우선
-  if (recordedBlob) {
-    const url = URL.createObjectURL(recordedBlob);
-    addLove("내 녹음", url, fromWhom);
-    return;
-  }
-
-  // 업로드 파일
-  const file = document.getElementById("fileUpload").files[0];
-  if (file) {
-    const url = URL.createObjectURL(file);
-    addLove(file.name, url, fromWhom);
-    return;
-  }
-
-  alert("녹음 또는 파일 업로드를 먼저 해주세요.");
-}
-
-//------------------------------------------------------------
-// 랜덤 재생 (홈 화면)
+// 랜덤 재생
 //------------------------------------------------------------
 function playRandomOne() {
-  const list = loadLoveList();
-  if (list.length === 0) {
-    alert("저장된 사랑해가 없습니다.");
+  const fav = loadFavorites();
+  const all = loadAllVoices();
+  if (fav.length === 0) {
+    alert("즐겨찾기가 비어 있습니다.");
     return;
   }
-  const pick = list[Math.floor(Math.random() * list.length)];
-  new Audio(pick.fileUrl).play();
+  const id = fav[Math.floor(Math.random() * fav.length)];
+  const item = all.find(v => v.id === id);
+  new Audio(item.fileUrl).play();
 }
 
 function playRandomLoop() {
-  const list = loadLoveList();
-  if (list.length === 0) {
-    alert("저장된 사랑해가 없습니다.");
+  const fav = loadFavorites();
+  const all = loadAllVoices();
+  if (fav.length === 0) {
+    alert("즐겨찾기가 비어 있습니다.");
     return;
   }
 
   function loop() {
-    const pick = list[Math.floor(Math.random() * list.length)];
-    const audio = new Audio(pick.fileUrl);
+    const id = fav[Math.floor(Math.random() * fav.length)];
+    const item = all.find(v => v.id === id);
+    const audio = new Audio(item.fileUrl);
     audio.play();
     audio.onended = loop;
   }
@@ -154,56 +223,10 @@ function playRandomLoop() {
 }
 
 //------------------------------------------------------------
-// 태그 선택(add.html)
+// 초기 실행
 //------------------------------------------------------------
-function getFromWhom() {
-  const checked = document.querySelector("input[name='fromWhom']:checked");
-
-  if (!checked) return "나";
-
-  if (checked.value === "custom") {
-    const text = document.getElementById("customInput").value.trim();
-    return text !== "" ? text : "나";
-  }
-
-  return checked.value;
-}
-
-//------------------------------------------------------------
-// 삭제 기능
-//------------------------------------------------------------
-function deleteLoveVoice(id) {
-  let list = loadLoveList();
-  list = list.filter(item => item.id !== id);
-  saveLoveList(list);
-  renderLoveList();
-}
-
-//------------------------------------------------------------
-// 리스트 렌더링(index.html 전용)
-//------------------------------------------------------------
-function renderLoveList() {
-  const list = loadLoveList();
-  const container = document.getElementById("list");
-  if (!container) return;
-
-  container.innerHTML = "";
-
-  list
-    .sort((a, b) => b.createdAt - a.createdAt)
-    .forEach(item => {
-      const div = document.createElement("div");
-      div.className = "list-item-card";
-
-      div.innerHTML = `
-        <div class="list-title">${item.title}</div>
-        <div class="list-from">${displayFromWhom(item.fromWhom)}가 나에게…</div>
-        <button class="primary small" onclick="new Audio('${item.fileUrl}').play()">▶ 재생</button>
-        <button class="delete" onclick="deleteLoveVoice('${item.id}')">🗑 삭제</button>
-      `;
-
-      container.appendChild(div);
-    });
-}
-
-window.onload = renderLoveList;
+window.onload = () => {
+  injectSamplesOnce();
+  renderFavoriteList();
+  renderAllVoices();
+};
