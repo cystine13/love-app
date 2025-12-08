@@ -21,6 +21,21 @@
   사랑해 등록하기
 </button>
 
+<!-- 직접 등록하기 (접이식 메뉴) -->
+<h3 style="cursor:pointer;" onclick="toggleRegisterMenu()">
+  직접 등록하기 ▼
+</h3>
+
+<div id="registerMenu" style="display:none; margin-bottom:20px;">
+  <button class="primary" onclick="location.href='record.html'">
+    🎤 녹음해서 등록하기
+  </button>
+
+  <button class="secondary" onclick="location.href='upload.html'">
+    📁 음성 파일로 등록하기
+  </button>
+</div>
+  
 <!-- 전체 보유 음성 목록 -->
 <h3>내가 가진 모든 음성</h3>
 <div id="allList"></div>
