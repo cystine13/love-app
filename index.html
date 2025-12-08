@@ -1,25 +1,31 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>사랑해 앱</title>
-  <link rel="stylesheet" href="style.css">
+    <meta charset="UTF-8">
+    <title>사랑해 앱 (무료 버전)</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="main.js" defer></script>
 </head>
 <body>
 
 <h1>❤️ 사랑해 앱</h1>
-<p class="subtitle">당신을 위한 따뜻한 한마디</p>
 
-<div class="card">
-  <h2>오늘의 사랑해</h2>
-  <button onclick="playToday()">▶ 듣기</button>
-</div>
+<section>
+    <h2>오늘의 사랑해</h2>
+    <button onclick="playRandomOne()">▶ 재생</button>
+</section>
 
-<button class="primary" onclick="location.href='add.html'">+ 추가하기</button>
+<section>
+    <h2>나만의 사랑해</h2>
+    <button onclick="playRandomLoop()">▶ 랜덤 반복 재생</button>
+</section>
 
+<section>
+    <a href="add.html"><button class="add-btn">+ 새로운 사랑해 추가하기</button></a>
+</section>
+
+<h2>내 사랑해 목록</h2>
 <div id="list"></div>
 
-<script src="main.js"></script>
 </body>
 </html>
