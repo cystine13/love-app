@@ -8,24 +8,32 @@
 </head>
 <body>
 
-<h1>❤️ 사랑해 앱</h1>
+<div class="container">
+    <h1 class="title">❤️ 사랑해 앱</h1>
 
-<section>
-    <h2>오늘의 사랑해</h2>
-    <button onclick="playRandomOne()">▶ 재생</button>
-</section>
+    <!-- 오늘의 사랑해 -->
+    <section class="section-box">
+        <h2 class="section-title">🌟 오늘의 사랑해</h2>
+        <button class="btn-main" onclick="playRandomOne()">▶ 듣기</button>
+    </section>
 
-<section>
-    <h2>나만의 사랑해</h2>
-    <button onclick="playRandomLoop()">▶ 랜덤 반복 재생</button>
-</section>
+    <!-- 나만의 사랑해 -->
+    <section class="section-box">
+        <h2 class="section-title">🎧 나만의 사랑해</h2>
+        <button class="btn-sub" onclick="playRandomLoop()">▶ 랜덤 재생</button>
+    </section>
 
-<section>
-    <a href="add.html"><button class="add-btn">+ 새로운 사랑해 추가하기</button></a>
-</section>
+    <!-- 추가하기 -->
+    <section class="section-box">
+        <a href="add.html">
+            <button class="btn-add">+ 새로운 사랑해 추가하기</button>
+        </a>
+    </section>
 
-<h2>내 사랑해 목록</h2>
-<div id="list"></div>
+    <!-- 리스트 -->
+    <h2 class="list-title">💌 내 사랑해 목록</h2>
+    <div id="list" class="list-area"></div>
+</div>
 
 </body>
 </html>
