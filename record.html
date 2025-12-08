@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>녹음해서 등록하기</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<h1>🎤 사랑해 녹음하기</h1>
+
+<button class="primary" onclick="startRecording()">녹음 시작</button>
+<button class="secondary" onclick="stopRecording()">녹음 종료</button>
+
+<audio id="previewAudio" controls style="display:none;"></audio>
+
+<h3>누가 사랑한다고 말했나요?</h3>
+
+<label><input type="radio" name="fromWhom" value="mom"> 엄마</label><br>
+<label><input type="radio" name="fromWhom" value="dad"> 아빠</label><br>
+<label><input type="radio" name="fromWhom" value="lover"> 연인</label><br>
+<label><input type="radio" name="fromWhom" value="friend"> 친구</label><br>
+<label><input type="radio" name="fromWhom" value="me"> 나</label><br>
+
+<label><input type="radio" name="fromWhom" value="custom"> 직접입력</label>
+<input id="customInput" type="text" placeholder="예: 선생님"><br><br>
+
+<button class="primary" onclick="saveVoice()">저장하기</button>
+
+<script src="main.js"></script>
+</body>
+</html>
