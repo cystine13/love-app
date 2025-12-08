@@ -1,39 +1,25 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-    <meta charset="UTF-8">
-    <title>사랑해 앱 (무료 버전)</title>
-    <link rel="stylesheet" href="style.css">
-    <script src="main.js" defer></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>사랑해 앱</title>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-<div class="container">
-    <h1 class="title">❤️ 사랑해 앱</h1>
+<h1>❤️ 사랑해 앱</h1>
+<p class="subtitle">당신을 위한 따뜻한 한마디</p>
 
-    <!-- 오늘의 사랑해 -->
-    <section class="section-box">
-        <h2 class="section-title">🌟 오늘의 사랑해</h2>
-        <button class="btn-main" onclick="playRandomOne()">▶ 듣기</button>
-    </section>
-
-    <!-- 나만의 사랑해 -->
-    <section class="section-box">
-        <h2 class="section-title">🎧 나만의 사랑해</h2>
-        <button class="btn-sub" onclick="playRandomLoop()">▶ 랜덤 재생</button>
-    </section>
-
-    <!-- 추가하기 -->
-    <section class="section-box">
-        <a href="add.html">
-            <button class="btn-add">+ 새로운 사랑해 추가하기</button>
-        </a>
-    </section>
-
-    <!-- 리스트 -->
-    <h2 class="list-title">💌 내 사랑해 목록</h2>
-    <div id="list" class="list-area"></div>
+<div class="card">
+  <h2>오늘의 사랑해</h2>
+  <button onclick="playToday()">▶ 듣기</button>
 </div>
 
+<button class="primary" onclick="location.href='add.html'">+ 추가하기</button>
+
+<div id="list"></div>
+
+<script src="main.js"></script>
 </body>
 </html>
