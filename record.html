@@ -3,31 +3,106 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>녹음해서 등록하기</title>
+  <title>녹음해서 사랑해 등록하기</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
 <h1>🎤 사랑해 녹음하기</h1>
 
-<button class="primary" onclick="startRecording()">녹음 시작</button>
-<button class="secondary" onclick="stopRecording()">녹음 종료</button>
+<!-- 녹음 버튼 -->
+<button class="primary" onclick="startRecording()">🔴 녹음 시작</button>
+<button class="secondary" onclick="stopRecording()">⏹ 녹음 종료</button>
 
-<audio id="previewAudio" controls style="display:none;"></audio>
+<!-- 미리듣기 -->
+<audio id="previewAudio" controls style="display:none; margin-top:20px;"></audio>
 
-<h3>누가 사랑한다고 말했나요?</h3>
+<hr style="margin:25px 0;">
+
+<!-- 태그 선택 -->
+<h3>누가 나에게 사랑해라고 말했나요?</h3>
 
 <label><input type="radio" name="fromWhom" value="mom"> 엄마</label><br>
 <label><input type="radio" name="fromWhom" value="dad"> 아빠</label><br>
 <label><input type="radio" name="fromWhom" value="lover"> 연인</label><br>
 <label><input type="radio" name="fromWhom" value="friend"> 친구</label><br>
+<label><input type="radio" name="fromWhom" value="child"> 아이</label><br>
 <label><input type="radio" name="fromWhom" value="me"> 나</label><br>
 
-<label><input type="radio" name="fromWhom" value="custom"> 직접입력</label>
-<input id="customInput" type="text" placeholder="예: 선생님"><br><br>
+<label>
+  <input type="radio" name="fromWhom" value="custom">
+  직접 입력:
+</label>
+<input type="text" id="customInput" placeholder="예: 미래의 나">
 
-<button class="primary" onclick="saveVoice()">저장하기</button>
+<hr style="margin:25px 0;">
+
+<!-- 저장 버튼 -->
+<button class="primary" onclick="saveRecordedVoice()">저장하기</button>
 
 <script src="main.js"></script>
+
+<script>
+let mediaRecorder;
+let audioChunks = [];
+let recordedBlob = null;
+
+// 녹음 시작
+function startRecording() {
+  navigator.mediaDevices.getUserMedia({ audio: true }).then(stream => {
+    mediaRecorder = new MediaRecorder(stream);
+    audioChunks = [];
+
+    mediaRecorder.start();
+    alert("녹음을 시작합니다!");
+
+    mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
+
+    mediaRecorder.onstop = () => {
+      recordedBlob = new Blob(audioChunks, { type: "audio/webm" });
+      const url = URL.createObjectURL(recordedBlob);
+
+      const audio = document.getElementById("previewAudio");
+      audio.src = url;
+      audio.style.display = "block";
+    };
+  });
+}
+
+// 녹음 종료
+function stopRecording() {
+  if (mediaRecorder) {
+    mediaRecorder.stop();
+    alert("녹음을 종료했습니다.");
+  }
+}
+
+// base64 변환 함수
+function blobToBase64(blob) {
+  return new Promise((resolve) => {
+    const reader = new FileReader();
+    reader.onloadend = () => resolve(reader.result);
+    reader.readAsDataURL(blob);
+  });
+}
+
+// 저장하기
+async function saveRecordedVoice() {
+  if (!recordedBlob) {
+    alert("녹음된 음성이 없습니다!");
+    return;
+  }
+
+  const fromWhom = getFromWhom();
+
+  const base64audio = await blobToBase64(recordedBlob);
+
+  addVoice("내 녹음", base64audio, fromWhom);
+
+  alert("저장되었습니다!");
+  location.href = "add.html";
+}
+</script>
+
 </body>
 </html>
