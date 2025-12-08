@@ -1,44 +1,102 @@
-/* 리스트 카드 */
-.list-item-card {
+/* 전체 화면 기본 설정 */
+body {
+  font-family: sans-serif;
+  background: #FFF6F3;
+  padding: 20px;
+  color: #5A4A42;
+  margin: 0;
+}
+
+/* 제목 */
+h1 {
+  text-align: center;
+  color: #E2607A;
+  margin-top: 10px;
+}
+
+.subtitle {
+  text-align: center;
+  color: #A89084;
+  margin-bottom: 20px;
+}
+
+/* 기본 카드 (오늘의 사랑해 / 나만의 사랑해) */
+.card {
   background: white;
   padding: 15px;
-  border-radius: 16px;
+  border-radius: 18px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+  margin-bottom: 20px;
+}
+
+/* 버튼 공통 스타일 */
+button {
+  padding: 12px 16px;
+  border-radius: 12px;
+  border: none;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+/* 메인 강조 버튼 */
+.primary {
+  width: 100%;
+  background: #FFB5C2;
+  color: white;
+  margin-bottom: 15px;
+}
+
+/* 연한 보조 버튼 */
+.secondary {
+  width: 100%;
+  background: #FFE4E9;
+  color: #5A4A42;
+}
+
+/* 리스트 카드 (내 사랑해 목록) */
+.list-item-card {
+  background: white;
+  padding: 14px;
+  border-radius: 18px; /* 기존 카드와 동일하게 맞춤 */
   box-shadow: 0 2px 8px rgba(0,0,0,0.08);
   margin-bottom: 15px;
 }
 
+/* 리스트 제목 텍스트 */
 .list-title {
   font-weight: bold;
   color: #5A4A42;
+  font-size: 16px;
   margin-bottom: 6px;
-  font-size: 17px;
 }
 
+/* "~가 나에게..." 문구 */
 .list-from {
   color: #A89084;
-  margin-bottom: 10px;
   font-size: 14px;
+  margin-bottom: 12px;
 }
 
-/* 작은 버튼 스타일 */
+/* 작은 버튼 (재생, 삭제 버튼 크기 조정) */
 .small {
   width: auto;
   padding: 8px 12px;
   font-size: 14px;
+  border-radius: 10px;
   margin-right: 6px;
 }
 
-/* 삭제 버튼 */
-.delete {
-  background: #FFD6D6;
-  color: #8A3A3A;
-  padding: 8px 12px;
-  border-radius: 10px;
-  font-size: 14px;
-}
-
-/* 하이라이트된 primary 버튼 (작은 버전) */
+/* 작은 primary 버튼 */
 .primary.small {
   background: #FFB5C2;
   color: white;
+}
+
+/* 삭제 버튼 (분위기 해치지 않는 웜톤) */
+.delete {
+  background: #FFE4E9;
+  color: #A33A3A;
+  padding: 8px 12px;
+  border-radius: 10px;
+  font-size: 14px;
 }
