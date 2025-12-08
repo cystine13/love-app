@@ -1,35 +1,46 @@
 body {
-    font-family: 'Apple SD Gothic Neo', sans-serif;
-    background: #faf7f5;
-    padding: 20px;
+  font-family: sans-serif;
+  background: #FFF6F3;
+  padding: 20px;
+  color: #5A4A42;
 }
 
 h1 {
-    color: #e25580;
+  text-align: center;
+  color: #E2607A;
+}
+
+.subtitle {
+  text-align: center;
+  color: #A89084;
+  margin-bottom: 20px;
 }
 
 .card {
-    background: white;
-    padding: 12px;
-    margin-bottom: 10px;
-    border-radius: 12px;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-}
-
-.add-btn {
-    background: #e25580;
-    color: white;
-    padding: 10px;
-    border-radius: 12px;
-    border: none;
+  background: white;
+  padding: 15px;
+  border-radius: 18px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+  margin-bottom: 20px;
 }
 
 button {
-    margin-top: 5px;
-    padding: 6px 10px;
+  padding: 12px 16px;
+  border-radius: 12px;
+  border: none;
+  font-size: 16px;
+  cursor: pointer;
 }
 
-.delete {
-    background: #ffdfe0;
-    color: #802020;
+.primary {
+  width: 100%;
+  background: #FFB5C2;
+  color: white;
+  margin-bottom: 15px;
+}
+
+.secondary {
+  width: 100%;
+  background: #FFE4E9;
+  color: #5A4A42;
 }
