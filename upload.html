@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>음성 파일로 등록하기</title>
+  <link rel="stylesheet" href="style.css">
+
+  <style>
+    h1 { text-align:center; color:#E2607A; margin-bottom:25px; }
+
+    .upload-box {
+      padding: 15px;
+      background: #FFF0F3;
+      border-radius: 14px;
+      margin-bottom: 20px;
+    }
+
+    audio {
+      width: 100%;
+      display: none;
+      margin-top: 15px;
+    }
+
+    .primary {
+      width: 100%;
+      background: #FFB5C2;
+      padding: 14px;
+      border-radius: 12px;
+      color: white;
+      font-size: 17px;
+      margin-top: 20px;
+      border: none;
+    }
+  </style>
+</head>
+<body>
+
+<h1>📁 음성 파일로 등록하기</h1>
+
+<div class="upload-box">
+  <input type="file" id="uploadFile" accept="audio/*">
+  <audio id="preview" controls></audio>
+</div>
+
+<hr style="margin:25px 0;">
+
+<div class="tag-label">누가 나에게 사랑해라고 말했나요?</div>
+
+<div class="tag-area">
+  <label><input type="radio" name="fromWhom" value="엄마"> 엄마</label>
+  <label><input type="radio" name="fromWhom" value="아빠"> 아빠</label>
+  <label><input type="radio" name="fromWhom" value="연인"> 연인</label>
+  <label><input type="radio" name="fromWhom" value="친구"> 친구</label>
+  <label><input type="radio" name="fromWhom" value="아이"> 아이</label>
+  <label><input type="radio" name="fromWhom" value="나"> 나</label>
+
+  <label>
+    <input type="radio" name="fromWhom" value="custom">
+    직접 입력:
+    <input type="text" id="customInput" placeholder="예: 미래의 나"
+      style="width:60%; padding:6px; margin-left:5px;">
+  </label>
+</div>
+
+<button class="primary" onclick="saveFile()">💾 저장하기</button>
+<button class="home-btn" onclick="location.href='index.html'">🏠 홈으로</button>
+
+<script>
+// ------------------------------------------------------------
+// 업로드 파일 선택 시 미리듣기 표시
+// ------------------------------------------------------------
+document.getElementById("uploadFile").addEventListener("change", function () {
+  const file = this.files[0];
+  if (!file) return;
+
+  const url = URL.createObjectURL(file);
+  const preview = document.getElementById("preview");
+
+  preview.src = url;
+  preview.style.display = "block";
+});
+
+// ------------------------------------------------------------
+// 태그 선택
+// ------------------------------------------------------------
+function getFromWhom() {
+  const checked = document.querySelector("input[name='fromWhom']:checked");
+  if (!checked) return "나";
+
+  if (checked.value === "custom") {
+    const v = document.getElementById("customInput").value.trim();
+    return v !== "" ? v : "나";
+  }
+  return checked.value;
+}
+
+// ------------------------------------------------------------
+// Blob → Base64 변환
+// ------------------------------------------------------------
+function fileToBase64(file) {
+  return new Promise(resolve => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result);
+    reader.readAsDataURL(file);
+  });
+}
+
+// ------------------------------------------------------------
+// 무료버전: 저장 개수 5개 제한
+// ------------------------------------------------------------
+function canSaveMore() {
+  let list = JSON.parse(localStorage.getItem("allVoices") || "[]");
+  return list.length < 5;  
+}
+
+// ------------------------------------------------------------
+// 저장하기
+// ------------------------------------------------------------
+async function saveFile() {
+  const input = document.getElementById("uploadFile");
+  const file = input.files[0];
+
+  if (!file) return alert("먼저 음성 파일을 선택해주세요!");
+
+  if (!canSaveMore()) {
+    return alert("무료버전에서는 최대 5개의 음성만 저장할 수 있습니다.");
+  }
+
+  const base64 = await fileToBase64(file);
+  const fromWhom = getFromWhom();
+
+  let list = JSON.parse(localStorage.getItem("allVoices") || "[]");
+
+  list.push({
+    id: crypto.randomUUID(),
+    title: file.name.replace(/\.[^/.]+$/, ""), // 확장자 제거
+    fileUrl: base64,
+    fromWhom,
+    createdAt: Date.now()
+  });
+
+  localStorage.setItem("allVoices", JSON.stringify(list));
+
+  alert("저장되었습니다!");
+  location.href = "add.html";
+}
+</script>
+
+</body>
+</html>
