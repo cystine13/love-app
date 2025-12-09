@@ -6,10 +6,12 @@
   <title>사랑해 녹음하기</title>
   <link rel="stylesheet" href="style.css">
 
-  <!-- RecordRTC CDN -->
+  <!-- RecordRTC 라이브러리 (Safari 완전호환) -->
   <script src="https://cdn.webrtc-experiment.com/RecordRTC.js"></script>
 
   <style>
+    h1 { text-align:center; color:#E2607A; margin-bottom:25px; }
+
     .rec-btn {
       width: 100%;
       background: #FFB5C2;
@@ -18,7 +20,9 @@
       font-size: 18px;
       border: none;
       margin-bottom: 15px;
+      color: white;
     }
+
     .stop-btn {
       width: 100%;
       background: #FFD6D6;
@@ -27,6 +31,38 @@
       font-size: 18px;
       border: none;
       margin-bottom: 15px;
+      color: #8A3A3A;
+    }
+
+    audio {
+      width: 100%;
+      margin-top: 15px;
+      display: none;
+    }
+
+    .tag-label {
+      font-size: 17px;
+      color: #5A4A42;
+      margin-bottom: 10px;
+      font-weight: bold;
+    }
+
+    .tag-area label {
+      display: block;
+      margin-bottom: 8px;
+      font-size: 16px;
+      color: #6A5F58;
+    }
+
+    .primary {
+      width: 100%;
+      background: #FFB5C2;
+      padding: 14px;
+      border-radius: 12px;
+      color: white;
+      font-size: 17px;
+      margin-top: 20px;
+      border: none;
     }
   </style>
 </head>
@@ -37,43 +73,51 @@
 <button class="rec-btn" onclick="startRecording()">🔴 녹음 시작</button>
 <button class="stop-btn" onclick="stopRecording()">⏹ 녹음 종료</button>
 
-<audio id="preview" controls style="display:none; width:100%; margin-top:15px;"></audio>
+<audio id="preview" controls></audio>
 
-<hr>
+<hr style="margin:25px 0;">
 
-<h3>누가 나에게 사랑해라고 말했나요?</h3>
-<div id="tagArea">
-  <label><input type="radio" name="fromWhom" value="엄마"> 엄마</label><br>
-  <label><input type="radio" name="fromWhom" value="아빠"> 아빠</label><br>
-  <label><input type="radio" name="fromWhom" value="연인"> 연인</label><br>
-  <label><input type="radio" name="fromWhom" value="친구"> 친구</label><br>
-  <label><input type="radio" name="fromWhom" value="아이"> 아이</label><br>
-  <label><input type="radio" name="fromWhom" value="나"> 나</label><br>
-  <label><input type="radio" name="fromWhom" value="custom"> 직접 입력: 
-    <input type="text" id="customInput" placeholder="예: 미래의 나">
+<div class="tag-label">누가 나에게 사랑해라고 말했나요?</div>
+
+<div class="tag-area">
+  <label><input type="radio" name="fromWhom" value="엄마"> 엄마</label>
+  <label><input type="radio" name="fromWhom" value="아빠"> 아빠</label>
+  <label><input type="radio" name="fromWhom" value="연인"> 연인</label>
+  <label><input type="radio" name="fromWhom" value="친구"> 친구</label>
+  <label><input type="radio" name="fromWhom" value="아이"> 아이</label>
+  <label><input type="radio" name="fromWhom" value="나"> 나</label>
+
+  <label>
+    <input type="radio" name="fromWhom" value="custom">
+    직접 입력:
+    <input type="text" id="customInput" placeholder="예: 미래의 나" style="width:60%; padding:6px; margin-left:5px;">
   </label>
 </div>
 
-<button class="primary" style="margin-top:20px;" onclick="saveVoice()">💾 저장하기</button>
+<button class="primary" onclick="saveVoice()">💾 저장하기</button>
 
 <script>
-let recorder; 
+let recorder;
 let recordedBlob;
 
 // ------------------------------------------------------------
 // 녹음 시작
 // ------------------------------------------------------------
 async function startRecording() {
-  const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
 
-  recorder = RecordRTC(stream, {
-    type: "audio",
-    mimeType: "audio/wav",
-    desiredSampRate: 16000
-  });
+    recorder = RecordRTC(stream, {
+      type: "audio",
+      mimeType: "audio/wav",
+      desiredSampRate: 16000
+    });
 
-  recorder.startRecording();
-  alert("녹음을 시작했습니다!");
+    recorder.startRecording();
+    alert("녹음을 시작했습니다!");
+  } catch (err) {
+    alert("마이크 접근이 거부되었습니다. 설정에서 권한을 허용해주세요.");
+  }
 }
 
 // ------------------------------------------------------------
@@ -86,11 +130,23 @@ function stopRecording() {
     recordedBlob = recorder.getBlob();
 
     const audioURL = URL.createObjectURL(recordedBlob);
-    const audio = document.getElementById("preview");
-    audio.src = audioURL;
-    audio.style.display = "block";
+    const preview = document.getElementById("preview");
+    preview.src = audioURL;
+    preview.style.display = "block";
 
     alert("녹음을 종료했습니다!");
+  });
+}
+
+// ------------------------------------------------------------
+// Blob → Base64 변환
+// ------------------------------------------------------------
+function blobToBase64(blob) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onloadend = () => resolve(reader.result);
+    reader.onerror = reject;
+    reader.readAsDataURL(blob);
   });
 }
 
@@ -109,28 +165,25 @@ function getFromWhom() {
 }
 
 // ------------------------------------------------------------
-// localStorage 등록
+// 저장하기 (base64 저장 + allVoices에 저장)
 // ------------------------------------------------------------
-function saveVoice() {
-  if (!recordedBlob) {
-    alert("녹음이 완료되지 않았습니다!");
-    return;
-  }
+async function saveVoice() {
+  if (!recordedBlob) return alert("녹음이 완료되지 않았습니다!");
 
   const fromWhom = getFromWhom();
-  const fileUrl = URL.createObjectURL(recordedBlob);
+  const base64 = await blobToBase64(recordedBlob);
 
-  let all = JSON.parse(localStorage.getItem("allVoices") || "[]");
+  let list = JSON.parse(localStorage.getItem("allVoices") || "[]");
 
-  all.push({
+  list.push({
     id: crypto.randomUUID(),
     title: "내 녹음",
-    fileUrl,
+    fileUrl: base64,   // ← 모든 페이지에서 재생 가능
     fromWhom,
     createdAt: Date.now()
   });
 
-  localStorage.setItem("allVoices", JSON.stringify(all));
+  localStorage.setItem("allVoices", JSON.stringify(list));
 
   alert("저장되었습니다!");
   location.href = "add.html";
