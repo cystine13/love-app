@@ -6,7 +6,7 @@
   <title>사랑해 녹음하기</title>
   <link rel="stylesheet" href="style.css">
 
-  <!-- RecordRTC 라이브러리 (Safari 완전호환) -->
+  <!-- RecordRTC 라이브러리 -->
   <script src="https://cdn.webrtc-experiment.com/RecordRTC.js"></script>
 
   <style>
@@ -99,11 +99,25 @@
 <script>
 let recorder;
 let recordedBlob;
+let timeoutId;
 
 // ------------------------------------------------------------
-// 녹음 시작
+// 현재 저장된 음성 개수 확인 (최대 5개)
+// ------------------------------------------------------------
+function canSaveMore() {
+  const list = JSON.parse(localStorage.getItem("allVoices") || "[]");
+  return list.length < 5;
+}
+
+// ------------------------------------------------------------
+// 녹음 시작 (10초 자동 제한)
 // ------------------------------------------------------------
 async function startRecording() {
+  if (!canSaveMore()) {
+    alert("무료 버전에서는 최대 5개의 음성만 저장할 수 있어요!");
+    return;
+  }
+
   try {
     const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
 
@@ -114,7 +128,14 @@ async function startRecording() {
     });
 
     recorder.startRecording();
-    alert("녹음을 시작했습니다!");
+    alert("녹음을 시작했습니다! (최대 10초)");
+
+    // 🔥 10초 뒤 자동 종료
+    timeoutId = setTimeout(() => {
+      stopRecording();
+      alert("10초가 지나 자동으로 녹음이 종료되었습니다.");
+    }, 10000);
+
   } catch (err) {
     alert("마이크 접근이 거부되었습니다. 설정에서 권한을 허용해주세요.");
   }
@@ -124,28 +145,29 @@ async function startRecording() {
 // 녹음 종료
 // ------------------------------------------------------------
 function stopRecording() {
-  if (!recorder) return alert("녹음이 시작되지 않았습니다.");
+  if (!recorder) return;
+
+  clearTimeout(timeoutId);
 
   recorder.stopRecording(() => {
     recordedBlob = recorder.getBlob();
 
-    const audioURL = URL.createObjectURL(recordedBlob);
+    const url = URL.createObjectURL(recordedBlob);
     const preview = document.getElementById("preview");
-    preview.src = audioURL;
+    preview.src = url;
     preview.style.display = "block";
-
-    alert("녹음을 종료했습니다!");
   });
+
+  alert("녹음을 종료했습니다!");
 }
 
 // ------------------------------------------------------------
-// Blob → Base64 변환
+// Blob → Base64
 // ------------------------------------------------------------
 function blobToBase64(blob) {
-  return new Promise((resolve, reject) => {
+  return new Promise((resolve) => {
     const reader = new FileReader();
     reader.onloadend = () => resolve(reader.result);
-    reader.onerror = reject;
     reader.readAsDataURL(blob);
   });
 }
@@ -159,16 +181,25 @@ function getFromWhom() {
 
   if (checked.value === "custom") {
     const t = document.getElementById("customInput").value.trim();
-    return t !== "" ? t : "나";
+    return t || "나";
   }
+
   return checked.value;
 }
 
 // ------------------------------------------------------------
-// 저장하기 (base64 저장 + allVoices에 저장)
+// 저장
 // ------------------------------------------------------------
 async function saveVoice() {
-  if (!recordedBlob) return alert("녹음이 완료되지 않았습니다!");
+  if (!recordedBlob) {
+    alert("녹음이 완료되지 않았습니다!");
+    return;
+  }
+
+  if (!canSaveMore()) {
+    alert("무료 버전에서는 5개의 음성만 저장할 수 있어요!");
+    return;
+  }
 
   const fromWhom = getFromWhom();
   const base64 = await blobToBase64(recordedBlob);
@@ -178,7 +209,7 @@ async function saveVoice() {
   list.push({
     id: crypto.randomUUID(),
     title: "내 녹음",
-    fileUrl: base64,   // ← 모든 페이지에서 재생 가능
+    fileUrl: base64,
     fromWhom,
     createdAt: Date.now()
   });
