@@ -100,3 +100,16 @@ button {
   border-radius: 10px;
   font-size: 14px;
 }
+
+/* 홈 버튼 */
+.home-btn {
+  width: 100%;
+  padding: 14px;
+  border-radius: 12px;
+  background: #FFE4E9;
+  color: #5A4A42;
+  font-size: 17px;
+  border: none;
+  margin-top: 25px;
+  cursor: pointer;
+}
