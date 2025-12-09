@@ -3,101 +3,134 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>녹음해서 사랑해 등록하기</title>
+  <title>사랑해 녹음하기</title>
   <link rel="stylesheet" href="style.css">
+
+  <!-- RecordRTC CDN -->
+  <script src="https://cdn.webrtc-experiment.com/RecordRTC.js"></script>
+
+  <style>
+    .rec-btn {
+      width: 100%;
+      background: #FFB5C2;
+      padding: 15px;
+      border-radius: 14px;
+      font-size: 18px;
+      border: none;
+      margin-bottom: 15px;
+    }
+    .stop-btn {
+      width: 100%;
+      background: #FFD6D6;
+      padding: 15px;
+      border-radius: 14px;
+      font-size: 18px;
+      border: none;
+      margin-bottom: 15px;
+    }
+  </style>
 </head>
 <body>
 
 <h1>🎤 사랑해 녹음하기</h1>
 
-<!-- 녹음 버튼 -->
-<button class="primary" onclick="startRecording()">🔴 녹음 시작</button>
-<button class="secondary" onclick="stopRecording()">⏹ 녹음 종료</button>
+<button class="rec-btn" onclick="startRecording()">🔴 녹음 시작</button>
+<button class="stop-btn" onclick="stopRecording()">⏹ 녹음 종료</button>
 
-<!-- 미리듣기 -->
-<audio id="previewAudio" controls style="display:none; margin-top:20px;"></audio>
+<audio id="preview" controls style="display:none; width:100%; margin-top:15px;"></audio>
 
-<hr style="margin:25px 0;">
+<hr>
 
-<!-- 태그 선택 -->
 <h3>누가 나에게 사랑해라고 말했나요?</h3>
+<div id="tagArea">
+  <label><input type="radio" name="fromWhom" value="엄마"> 엄마</label><br>
+  <label><input type="radio" name="fromWhom" value="아빠"> 아빠</label><br>
+  <label><input type="radio" name="fromWhom" value="연인"> 연인</label><br>
+  <label><input type="radio" name="fromWhom" value="친구"> 친구</label><br>
+  <label><input type="radio" name="fromWhom" value="아이"> 아이</label><br>
+  <label><input type="radio" name="fromWhom" value="나"> 나</label><br>
+  <label><input type="radio" name="fromWhom" value="custom"> 직접 입력: 
+    <input type="text" id="customInput" placeholder="예: 미래의 나">
+  </label>
+</div>
 
-<label><input type="radio" name="fromWhom" value="mom"> 엄마</label><br>
-<label><input type="radio" name="fromWhom" value="dad"> 아빠</label><br>
-<label><input type="radio" name="fromWhom" value="lover"> 연인</label><br>
-<label><input type="radio" name="fromWhom" value="friend"> 친구</label><br>
-<label><input type="radio" name="fromWhom" value="child"> 아이</label><br>
-<label><input type="radio" name="fromWhom" value="me"> 나</label><br>
-
-<label>
-  <input type="radio" name="fromWhom" value="custom">
-  직접 입력:
-</label>
-<input type="text" id="customInput" placeholder="예: 미래의 나">
-
-<hr style="margin:25px 0;">
-
-<!-- 저장 버튼 -->
-<button class="primary" onclick="saveRecordedVoice()">저장하기</button>
-
-<script src="main.js"></script>
+<button class="primary" style="margin-top:20px;" onclick="saveVoice()">💾 저장하기</button>
 
 <script>
-let mediaRecorder;
-let audioChunks = [];
-let recordedBlob = null;
+let recorder; 
+let recordedBlob;
 
+// ------------------------------------------------------------
 // 녹음 시작
-function startRecording() {
-  navigator.mediaDevices.getUserMedia({ audio: true }).then(stream => {
-    mediaRecorder = new MediaRecorder(stream);
-    audioChunks = [];
+// ------------------------------------------------------------
+async function startRecording() {
+  const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
 
-    mediaRecorder.start();
-    alert("녹음을 시작합니다!");
-
-    mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
-
-    mediaRecorder.onstop = () => {
-      recordedBlob = new Blob(audioChunks, { type: "audio/webm" });
-      const url = URL.createObjectURL(recordedBlob);
-
-      const audio = document.getElementById("previewAudio");
-      audio.src = url;
-      audio.style.display = "block";
-    };
+  recorder = RecordRTC(stream, {
+    type: "audio",
+    mimeType: "audio/wav",
+    desiredSampRate: 16000
   });
+
+  recorder.startRecording();
+  alert("녹음을 시작했습니다!");
 }
 
+// ------------------------------------------------------------
 // 녹음 종료
+// ------------------------------------------------------------
 function stopRecording() {
-  if (mediaRecorder) {
-    mediaRecorder.stop();
-    alert("녹음을 종료했습니다.");
-  }
-}
+  if (!recorder) return alert("녹음이 시작되지 않았습니다.");
 
-// base64 변환 함수
-function blobToBase64(blob) {
-  return new Promise((resolve) => {
-    const reader = new FileReader();
-    reader.onloadend = () => resolve(reader.result);
-    reader.readAsDataURL(blob);
+  recorder.stopRecording(() => {
+    recordedBlob = recorder.getBlob();
+
+    const audioURL = URL.createObjectURL(recordedBlob);
+    const audio = document.getElementById("preview");
+    audio.src = audioURL;
+    audio.style.display = "block";
+
+    alert("녹음을 종료했습니다!");
   });
 }
 
-// 저장하기
-async function saveRecordedVoice() {
+// ------------------------------------------------------------
+// 태그 선택
+// ------------------------------------------------------------
+function getFromWhom() {
+  const checked = document.querySelector("input[name='fromWhom']:checked");
+  if (!checked) return "나";
+
+  if (checked.value === "custom") {
+    const t = document.getElementById("customInput").value.trim();
+    return t !== "" ? t : "나";
+  }
+  return checked.value;
+}
+
+// ------------------------------------------------------------
+// localStorage 등록
+// ------------------------------------------------------------
+function saveVoice() {
   if (!recordedBlob) {
-    alert("녹음된 음성이 없습니다!");
+    alert("녹음이 완료되지 않았습니다!");
     return;
   }
 
   const fromWhom = getFromWhom();
+  const fileUrl = URL.createObjectURL(recordedBlob);
 
-  const base64audio = await blobToBase64(recordedBlob);
+  let all = JSON.parse(localStorage.getItem("allVoices") || "[]");
 
-  addVoice("내 녹음", base64audio, fromWhom);
+  all.push({
+    id: crypto.randomUUID(),
+    title: "내 녹음",
+    fileUrl,
+    fromWhom,
+    createdAt: Date.now()
+  });
+
+  localStorage.setItem("allVoices", JSON.stringify(all));
 
   alert("저장되었습니다!");
   location.href = "add.html";
