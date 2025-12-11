@@ -40,8 +40,8 @@ function displayFromWhom(value) {
 // add.html 실행 시 처음 1회 자동 주입
 //------------------------------------------------------------
 const sampleVoices = [
-  { title: "따뜻한 사랑해", fileUrl: "assets/sample1.mp3", fromWhom: "샘플" },
-  { title: "밝은 사랑해", fileUrl: "assets/sample2.mp3", fromWhom: "샘플" }
+  { title: "사랑해1", fileUrl: "assets/sample1.mp3", fromWhom: "아빠" },
+  { title: "사랑해2", fileUrl: "assets/sample2.mp3", fromWhom: "엄마" }
 ];
 
 function injectSamplesOnce() {
